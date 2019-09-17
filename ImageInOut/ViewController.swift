@@ -19,6 +19,8 @@ class ViewController: UIViewController {
     
     // MARK: Variables
     var rgbaImage: RGBAImage!
+    var startTime: CFAbsoluteTime?
+    var endTime: CFAbsoluteTime?
     
     private func setup() {
         guard let img = image else {
@@ -58,41 +60,85 @@ class ViewController: UIViewController {
     
     func processImage() {
         print("Processing...")
+        self.startTime = CFAbsoluteTimeGetCurrent()
 
         let imgSize: Int = rgbaImage.pixels.count
-        let segmentSize: Int = imgSize / 4
+        let segmentSize: Int = imgSize / 8
         let random: Int = Int.random(in: 0..<999)
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            let processGroupOne: DispatchGroup = DispatchGroup()
-            let processGroupTwo: DispatchGroup = DispatchGroup()
-            let processGroupThree: DispatchGroup = DispatchGroup()
-            let processGroupFour: DispatchGroup = DispatchGroup()
-
-            processGroupOne.enter()
+        let concurrentQueue1 = DispatchQueue(label: "concurrentQueue1", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue2 = DispatchQueue(label: "concurrentQueue2", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue3 = DispatchQueue(label: "concurrentQueue3", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue4 = DispatchQueue(label: "concurrentQueue4", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue5 = DispatchQueue(label: "concurrentQueue5", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue6 = DispatchQueue(label: "concurrentQueue6", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue7 = DispatchQueue(label: "concurrentQueue7", qos: .userInitiated, attributes: .concurrent)
+        let concurrentQueue8 = DispatchQueue(label: "concurrentQueue8", qos: .userInitiated, attributes: .concurrent)
+        
+        let processingGroup = DispatchGroup()
+        
+////////////////////////////////////////////////////////////////////////////
+        processingGroup.enter()
+        concurrentQueue1.async(group: processingGroup) {
             self.changeColor(toIndex: segmentSize, byAdding: random)
-            processGroupOne.leave()
-            processGroupOne.wait()
-
-            processGroupTwo.enter()
-            self.changeColor(fromIndex: segmentSize, toIndex: segmentSize * 2, byAdding: random)
-            processGroupTwo.leave()
-            processGroupTwo.wait()
-            
-            processGroupThree.enter()
-            self.changeColor(fromIndex: segmentSize * 2, toIndex: segmentSize * 3, byAdding: random)
-            processGroupThree.leave()
-            processGroupThree.wait()
-            
-            processGroupFour.enter()
-            self.changeColor(fromIndex: segmentSize * 3, toIndex: imgSize, byAdding: random)
-            processGroupFour.leave()
-            processGroupFour.wait()
-
-            DispatchQueue.main.async {
-                self.convertImage()
-            }
+            print("1 terminou")
+            processingGroup.leave()
         }
+
+        processingGroup.enter()
+        concurrentQueue2.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize, toIndex: segmentSize * 2, byAdding: random)
+            print("2 terminou")
+            processingGroup.leave()
+        }
+
+        processingGroup.enter()
+        concurrentQueue3.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 2, toIndex: segmentSize * 3, byAdding: random)
+            print("3 terminou")
+            processingGroup.leave()
+        }
+
+        processingGroup.enter()
+        concurrentQueue4.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 3, toIndex: segmentSize * 4, byAdding: random)
+            print("4 terminou")
+            processingGroup.leave()
+        }
+        
+        processingGroup.enter()
+        concurrentQueue5.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 4, toIndex: segmentSize * 5, byAdding: random)
+            print("5 terminou")
+            processingGroup.leave()
+        }
+        
+        processingGroup.enter()
+        concurrentQueue6.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 5, toIndex: segmentSize * 6, byAdding: random)
+            print("6 terminou")
+            processingGroup.leave()
+        }
+        
+        processingGroup.enter()
+        concurrentQueue7.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 6, toIndex: segmentSize * 7, byAdding: random)
+            print("7 terminou")
+            processingGroup.leave()
+        }
+        
+        processingGroup.enter()
+        concurrentQueue8.async(group: processingGroup) {
+            self.changeColor(fromIndex: segmentSize * 7, toIndex: imgSize, byAdding: random)
+            print("8 terminou")
+            processingGroup.leave()
+        }
+
+        processingGroup.notify(queue: .main) {
+            print("Foi geral!!")
+            self.convertImage()
+        }
+////////////////////////////////////////////////////////////////////////////
     }
     
     func convertImage() {
@@ -101,10 +147,13 @@ class ViewController: UIViewController {
             return
         }
         
+        self.endTime = CFAbsoluteTimeGetCurrent()
         print("Converted!")
+        let elapsedTime = Double(endTime ?? 0) - Double(startTime ?? 0)
+        print("In \(elapsedTime) seconds")
+        self.imageView?.image = newImage
         self.colorGrade?.isEnabled = true
         self.reverseButton?.isEnabled = true
-        self.imageView?.image = newImage
     }
     
     @IBAction func processImage(_ sender: UIButton) {
